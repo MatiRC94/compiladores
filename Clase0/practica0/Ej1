@@ -1,0 +1,3 @@
+(let
+var a:= "Hola mundox \n"
+in print (a) end;0)

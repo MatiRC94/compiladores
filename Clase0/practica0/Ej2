@@ -1,0 +1,15 @@
+(let type list = {item: int,rest:list}
+     function cons (x:int,l:list):list      = list {item = x, rest = l}
+     function length (x:list):int           = if x = nil then 0 else 1 + length (x.rest)
+     function concat1 (x:list, y:list):list = if x = nil then y else list {item = x.item, rest = concat1 (x.rest,y)}
+     function snoc (l:list, x:int):list     = concat1 (l, list {item = x, rest = nil})
+     function filtra (l:list, n:int):list   = if l = nil then l else filtra2(l,n)
+     function filtra2 (l:list, n:int):list  = if l.item = n then filtra(l.rest, n) else cons(l.item, filtra(l.rest, n))
+     function toString (x:int):string       = if x = 0 then "0" else toString2 (x)
+     function toString2 (x:int):string      = if x = 0 then ""  else concat (toString2 (x / 10),chr (x - (x / 10) * 10 + ord("0")))
+     function printstr (l:list)             = if l.rest = nil then print(toString (l.item)) else (print(toString(l.item));print(", ");printstr (l.rest))
+     var l1 : list := nil 
+     var l2 : list := cons (0,l1)
+     var l3 : list := cons (201,l2)
+in 
+    printstr(filtra (snoc (l3, 3), 0)) end;print("\n");0)
