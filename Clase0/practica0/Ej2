@@ -13,3 +13,4 @@
      var l3 : list := cons (201,l2)
 in 
     printstr(filtra (snoc (l3, 3), 0)) end;print("\n");0)
+
