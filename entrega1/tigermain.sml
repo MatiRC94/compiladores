@@ -5,6 +5,7 @@ open tigerseman
 open BasicIO Nonstdio
 open ejercicio4
 
+
 fun lexstream(is: instream) =
 	Lexing.createLexer(fn b => fn n => buff_input is b 0 n);
 fun errParsing(lbuf) = (print("Error en parsing!("
@@ -32,6 +33,7 @@ fun main(args) =
 		val _ = if arbol then tigerpp.exprAst expr else ()
 	in
 		transProg(expr);
+                print(toString (maxargsExp expr));
 		print "yes!!\n"
 	end	handle Fail s => print("Fail: "^s^"\n")
 

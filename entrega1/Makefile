@@ -8,8 +8,8 @@ MOSMLYACC=mosmlyac -v
 
 GCC=gcc
 CFLAGS= -g
-MOSMLC=${MOSMLHOME}/mosmlc -c -liberal
-MOSMLL=${MOSMLHOME}/mosmlc
+MOSMLC= mosmlc -c -liberal
+MOSMLL= mosmlc
 
 # Unix
 REMOVE=rm -f
