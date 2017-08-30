@@ -34,7 +34,7 @@ fun main(args) =
 	in
 		transProg(expr);
                 print(toString (maxargsExp expr));
-		print "yes!!\n"
+		print "\nyes!!\n"
 	end	handle Fail s => print("Fail: "^s^"\n")
 
 val _ = main(CommandLine.arguments())

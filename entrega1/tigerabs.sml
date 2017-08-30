@@ -4,6 +4,9 @@ struct
 type symbol = string
 type pos = int
 
+datatype oper = PlusOp | MinusOp | TimesOp | DivideOp
+	| EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
+
 datatype var = SimpleVar of symbol
 	| FieldVar of var * symbol
 	| SubscriptVar of var * exp
@@ -35,8 +38,6 @@ and dec = FunctionDec of ({name: symbol, params: field list,
 and ty = NameTy of symbol
 	| RecordTy of field list
 	| ArrayTy of symbol
-and oper = PlusOp | MinusOp | TimesOp | DivideOp
-	| EqOp | NeqOp | LtOp | LeOp | GtOp | GeOp
 
 withtype field = {name: symbol, escape: bool ref, typ: ty}
 end
