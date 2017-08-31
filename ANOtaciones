@@ -1,0 +1,135 @@
+Syntactic Sugar 
+
+-Clausura positiva 
+ e+ denota a {e,ee,eee,...}
+ e+ (eq= osea Equivalente) ee*
+
+-Clases de caracteres. Si c1,c2,...,c_k E A ,
+[c1c2..c_k] = c1 | c2 | c3
+-Si c1 - c_k son adyacentes 
+[c1-c_k] 
+- Clase negada
+[^c1...c_k] = [c1'c2'..c_k'], c_i' E A \ {c1...c_k}
+
+EJ:
+Un numero positivo: [0-9]+ permite 00000000000001
+                    0|[1-9][0-9]*
+-Palabras minusculas
+[a-z]+
+Variables en tiger
+[A-Za-z][A-Za-z-0-9_]*
+
+
+Automatas finitas
+Un AF esta formado por un conjunto finito de ESTADOS (con dos estados distinguidos start y end) y flechas entre estados llamadas TRANSICIONES. Las transiciones se "archivan" con la apricion de caracteres de A.
+
+DIBUJO EM CARPETA DE FRANK DEL AUTOMATA 
+
+
+Pumping lema 
+Dado un AF de k estados si reconoce una string s/|s| > k, existen strings A,B,C/ S = ABC y el AF reconoce tambien s'= AB^nC
+
+DIBUJO
+
+Problema: encontraru na E.R que reconozca solo strings de este formato
+
+S = ((...()....))
+    '----''-----'
+      n      n
+
+Ningun ( luego de ) 
+Supongamos tener un A que reconozca esto y solo esto
+
+Eligiendo N suficientemente grande, estamos en el pumping.
+Si B es de la forma (...(..)..)
+B^n pone abridores luego de cerradores
+Si B solo tiene ((...( desalentamos(? la cuenta
+Si quisieramos resolver esto, tendremos que pasar G.L.Contexto
+
+Una G.L.C esta formado por 
+Un conjunto finito T, de terminales o tokens
+Un conjunto finito NT de no-terminales  T interseccion NT = VACIO
+Un no-terminal distinguido llamado start.
+Un conjunto finito de REGLAS DE PRODUCCION, de la forma
+
+    alpha(A): secuencia de cero o mas B (beta)
+        A E NT 
+        B E T U NT
+          pertenece
+   
+Ejemplo                                         (((E)))
+    T= {(,)}  NT = {E} start = E                 ((E))
+R de P                                            (E)
+        E: (E)                                     E
+        E:
+
+
+
+Generadores de AF
+
+DIBUJO DEL FRANK
+
+Especificacio9nes para mesmllex 
+Siendo de la forma 
+    {
+        Codigo ML
+    }
+    Abreviaturas 
+        rule nombre =
+        parse er1 {accion}
+        | parse er2 {accion}
+         .
+         .
+         .
+        | parse er_n {accion}
+
+
+Codigo  val tabla = Polyhash.mkPolytable(20,Empty)
+
+        val _ = Lists.app(fn (k,v) => Polyhash.insert tabla (k,v))
+                [("let",LET),
+                 ("while",WHILE),
+                  .
+                  .
+                  .
+                  ]
+
+fun idPalClave S = 
+        case Polyhash.peek tabla s of
+        SOME v => v
+        | NONE => IDs
+
+
+Scanner ppal
+
+rule Tok = 
+      parse eof     {EoF}
+      | [`t0``\t``\r`]+  {Tok lexbuf}
+      .
+      .
+      .
+      | [`a`-`z`]+ 
+      | [`A`-`Z``a`-`z`][`A`-`Z``a`-`z``0`-`9``_`]*  {ID( get lexeme lexbuf)}
+      | [`0`-`9`]+  {INT (atoi(getLexeme lexbuf))}
+      | "/*"    {incComent();Coment lexbuf}
+      | `"` {TEXTO(String lexbuf)}
+Mas abajo
+
+    and coment =
+    parse eof { raise Fail "comentario abierto"}
+    | `
+paja
+
+
+
+
+    
+
+       
+
+
+
+
+
+
+
