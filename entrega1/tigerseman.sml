@@ -3,6 +3,7 @@ struct
 
 open tigerabs
 open tigersres
+open tigertab
 
 type expty = {exp: unit, ty: Tipo}
 
@@ -64,7 +65,7 @@ fun tiposIguales (TRecord _) TNil = true
 		(* 	tiposIguales a b *)
 		(* end *)raise Fail "No debería pasar! (2)"
   | tiposIguales a b = (a=b)
-  | tiposIguales _ = false
+(*  | tiposIguales _ = false*)
 fun transExp(venv, tenv) =
 	let fun error(s, p) = raise Fail ("Error -- línea "^Int.toString(p)^": "^s^"\n")
 		fun trexp(VarExp v) = trvar(v)
@@ -74,13 +75,17 @@ fun transExp(venv, tenv) =
 		| trexp(StringExp(s, _)) = {exp=(), ty=TString}
 		| trexp(CallExp({func, args}, nl)) =
 			let
-			        val f  = tabSaca venv func (* pasar a tabBusca  pa lo errore *)
-                                val ltaf = #3 f
-                                val trf = #4 f
-                                val lta = map (fn t => #2 (trexp t)) args
-                                val t = collate tiposIguales lta ltaf
-			{exp=(), ty=TUnit} (*COMPLETAR*)
-
+			    val f  = case tabBusca (func, venv) of
+                            SOME e => e
+                            | NONE => error("Error CallExp", nl)
+                val ltaf = #3 f
+                val trf = #4 f
+                val lta = map (fn t => #2 (trexp t)) args
+                val t = collate tiposIguales lta ltaf
+                val _ = if t then () else error("Error de tipado", nl)
+            in
+			    {exp=(), ty=TUnit} (*COMPLETAR*)
+            end
 		| trexp(OpExp({left, oper=EqOp, right}, nl)) =
 			let
 				val {exp=_, ty=tyl} = trexp left
