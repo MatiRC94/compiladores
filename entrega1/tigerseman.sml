@@ -173,7 +173,14 @@ fun transExp(venv, tenv) =
 				else error("El cuerpo de un while no puede devolver un valor", nl)
 			end
 		| trexp(ForExp({var, escape, lo, hi, body}, nl)) =
-			{exp=(), ty=TUnit} (*COMPLETAR*)
+                        let val {explo,tylo} = trexp lo 
+                            val _ = if esInt tylo then () else error (...)
+                            val {exphi,tyhi} = trexp hi
+                            val _ = if esInt tyhi then () else error(...)
+                            val venv' = tabinsert venv var(VarEntry {ty= TIntRo})
+                            val {empbody,tybody} = transExp (tenv,venv',body)
+                            val _ = if tybody = if tybody=TUnit then () else error (..)
+			in {exp=(), ty=TUnit} end (*COMPLETAR*)
 		| trexp(LetExp({decs, body}, _)) =
 			let
 				val (venv', tenv', _) = List.foldl (fn (d, (v, t, _)) => trdec(v, t) d) (venv, tenv, []) decs
@@ -191,11 +198,32 @@ fun transExp(venv, tenv) =
 			{exp=(), ty=TUnit} (*COMPLETAR*)
 		| trvar(SubscriptVar(v, e), nl) =
 			{exp=(), ty=TUnit} (*COMPLETAR*)
-		and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) = 
+		and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) = (*
+                        let val {expinit,tyinit} = transExp (tenv,venv,init)
+                            val tyv = case typ of 
+                                          NONE => if tyinit = TNIL then error (..) else tyinit
+                                          |SOME nt => 
+                                                     let val t' = transTy nt
+                                                         val _ = if iguales (tyinit,t') then () error (..)
+                                                     in t' end
+                            val venv' = tabinsert tabinserta venv name (VarEntry{ty=tyv})
+                         in venv' end *)
 			(venv, tenv, []) (*COMPLETAR*)
 		| trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) =
 			(venv, tenv, []) (*COMPLETAR*)
-		| trdec (venv,tenv) (FunctionDec fs) =
+
+		| trdec (venv,tenv) (FunctionDec fs) = (*
+                        let fun insdecl ({name,params,result,pos,...},venv) =
+                                let val params' = List.map (transTipos tenv) params
+                                    val result' = case result of
+                                                       SOME t => transTipos tenv t
+                                                       |NONE => TUnit
+                                    val venv' = tabinserta venv (FunEnty{formals=params',result=result'})
+                                in venv' end
+                            val venv' = List.foldr (fn(d,env) => algoDec(d,env) venv if end (?? esta linea y la que sigue tan flasheada
+                            fun type Body body env transExp(tenv,env,body)
+                            val emptyval = List.map (fn{body,...} => transExp(tenv,venv,body) if
+                            *)
 			(venv, tenv, []) (*COMPLETAR*)
 		| trdec (venv,tenv) (TypeDec ts) =
 			(venv, tenv, []) (*COMPLETAR*)
