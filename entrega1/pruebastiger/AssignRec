@@ -1,0 +1,4 @@
+let type list = {item: int,rest:list} 
+    var a : list := nil
+in
+   ( a.item := 2; a.rest := nil; 0) end

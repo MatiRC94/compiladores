@@ -77,21 +77,21 @@ fun transExp(venv, tenv) =
             let
                 val f  = case tabBusca (func, venv) of
                            SOME e => e
-                           | NONE => error("Error CallExp", nl)
-                val ltaf = (fn (Func {formals, ...}) => formals) f
-                val trf = (fn (Func {result, ...}) => result) f
+                           | NONE => error("Error. No existe la funcion \""^func^"\"", nl)
+                val ltaf = (fn (Func {formals, ...}) => formals | _ => raise Fail ("No es Func\n")) f
+                val trf = (fn (Func {result, ...}) => result | _ => raise Fail ("No es Func\n")) f      (*Pipe para evitar warning*)
                 val lta = map (fn t => (trexp  t)) args
                 val lta1 = map (fn {ty, ...} => ty) lta 
-                val _ = if (length lta1) = (length ltaf) then () else error("Error cantidad de argumentos en CallExp", nl)
+                val _ = if (length lta1) = (length ltaf) then () else error("Error cantidad de argumentos en \""^func^"\"", nl)
                 val t = let 
-                            fun tipolis [] _ = true
-                            | tipolis (x::xs) (y::ys) =  (tiposIguales x y) andalso tipolis xs ys (*short circuit andalso*)
+                            fun tipolis (x::xs) (y::ys) = (tiposIguales x y) andalso tipolis xs ys (*short circuit andalso*)
+                            | tipolis _ _ = true (* agregar error de tipo cuando hagamos prityprint de tipos*)
                         in
                             tipolis lta1 ltaf
                         end
-	            val _ = if t then () else error("Error de tipado", nl)
+	            val _ = if t then () else error("Error de tipo en  \""^func^"\"", nl)
             in
-                {exp=(), ty=TUnit} (*COMPLETAR*)
+                {exp=(), ty=TUnit} (*COMPLETADO*)
             end
         | trexp(OpExp({left, oper=EqOp, right}, nl)) =
             let
@@ -157,8 +157,21 @@ fun transExp(venv, tenv) =
                 val {exp, ty=tipo} = hd(rev lexti)
             in    { exp=(), ty=tipo } end
         | trexp(AssignExp({var=SimpleVar s, exp}, nl)) =
-            {exp=(), ty=TUnit} (*COMPLETAR*)
-        | trexp(AssignExp({var, exp}, nl)) =
+            let
+                val v = case tabBusca(s, venv) of
+                            SOME (Var e) => e
+                            | SOME _ => error ("Espera una variable y le das una funcion",nl)
+                            | NONE => error("No existe la variable \""^s^"\"", nl)
+                val tyv = #ty(v)
+                val expp = trexp exp
+                val tyexp = #ty(expp)
+                val _ = if tiposIguales tyv tyexp then () else error("Error de tipo en la asignacion de la variable \""^s^"\"", nl)
+            in
+                {exp=(), ty=TUnit} 
+            end (*COMPLETAR*)
+        | trexp(AssignExp({var = FieldVar(v, s), exp}, nl)) =
+            let
+                val tyv = case tabBusca(v, env) 
             {exp=(), ty=TUnit} (*COMPLETAR*)
         | trexp(IfExp({test, then', else'=SOME else'}, nl)) =
             let val {exp=testexp, ty=tytest} = trexp test
@@ -245,6 +258,6 @@ fun transProg ex =
                 LetExp({decs=[FunctionDec[({name="_tigermain", params=[],
                                 result=NONE, body=ex}, 0)]],
                         body=UnitExp 0}, 0)
-        val _ = transExp(tab_vars, tab_tipos) main
+        val _ = (* transExp(tab_vars, tab_tipos) main*) transExp(tab_vars, tab_tipos) ex
     in  print "bien!\n" end
 end
