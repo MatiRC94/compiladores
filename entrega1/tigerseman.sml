@@ -38,6 +38,9 @@ val tab_vars : (string, EnvEntry) Tabla = tabInserList(
         formals=[TInt], result=TUnit, extern=true})
     ])
 
+fun checkVar (SimpleVar s) =
+    checkVar (FieldVar (v,s)
+
 fun tipoReal (TTipo s, (env : tenv)) : Tipo = 
     (case tabBusca(s , env) of 
          NONE => raise Fail "tipoReal Ttipo"
@@ -89,8 +92,9 @@ fun transExp(venv, tenv) =
                         in
                             tipolis lta1 ltaf
                         end
-	            val _ = if t then () else error("Error de tipo en  \""^func^"\"", nl)
+	        val _ = if t then () else error("Error de tipo en  \""^func^"\"", nl)
             in
+
                 {exp=(), ty=TUnit} (*COMPLETADO*)
             end
         | trexp(OpExp({left, oper=EqOp, right}, nl)) =
@@ -168,10 +172,12 @@ fun transExp(venv, tenv) =
                 val _ = if tiposIguales tyv tyexp then () else error("Error de tipo en la asignacion de la variable \""^s^"\"", nl)
             in
                 {exp=(), ty=TUnit} 
-            end (*COMPLETAR*)
-        | trexp(AssignExp({var = FieldVar(v, s), exp}, nl)) =
+            end (*COMPLETADO SimpleVar*)
+        | trexp(AssignExp({var, expr}, nl)) =
             let
-                val tyv = case tabBusca(v, env) 
+                    check (FieldVar (v1,s1)) =
+                        val  
+               		
             {exp=(), ty=TUnit} (*COMPLETAR*)
         | trexp(IfExp({test, then', else'=SOME else'}, nl)) =
             let val {exp=testexp, ty=tytest} = trexp test
@@ -218,10 +224,29 @@ fun transExp(venv, tenv) =
         | trexp(ArrayExp({typ, size, init}, nl)) =
             {exp=(), ty=TUnit} (*COMPLETAR*)
         and trvar(SimpleVar s, nl) =
+              let 
+                        val v = case tabBusca(s, venv) of
+                                    SOME (Var e) => e
+                                    | SOME _ => error ("Espera una variable y le das una funcion",nl)
+                                    | NONE => error("No existe la variable \""^s^"\"", nl)
+                        val tyv = #ty(v)
+                        val expp = trexp exp
+                        val tyexp = #ty(expp)
+                        val _ = if tiposIguales tyv tyexp then () else error("Error de tipo en la asignacion de la variable \""^s^"\"", nl)
+              in (*TERMINAR*)
             {exp=(), ty=TUnit} (*COMPLETAR*)
         | trvar(FieldVar(v, s), nl) =
+                let
+                        val {expr,tipor} = trvar v
+                        fun tiporecord (RecordTy lf) = i(*case tabBusca (s, (map (fn t => #name (t)) lf)) of 
+                                                            SOME (Var e) => e
+                                                            | NONE => error ("No existe la variable\""^s^"\" en el record\""^v^"\"",nl)
+                                                            | SOME _ => error ("Deberia ser una variable, es otra cosa")
+                            tiporecord _ = error ("Error de tipo",nl)
+                in tiporecord tipor*)
+ 
             {exp=(), ty=TUnit} (*COMPLETAR*)
-        | trvar(SubscriptVar(v, e), nl) =
+        | trvar(SubscriptVar(v, e), nl) = 
             {exp=(), ty=TUnit} (*COMPLETAR*)
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) = (*
                         let val {expinit,tyinit} = transExp (tenv,venv,init)
