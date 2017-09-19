@@ -232,21 +232,29 @@ fun transExp(venv, tenv) =
                         val tyv = #ty(v)
                         val expp = trexp exp
                         val tyexp = #ty(expp)
-                        val _ = if tiposIguales tyv tyexp then () else error("Error de tipo en la asignacion de la variable \""^s^"\"", nl)
-              in (*TERMINAR*)
-            {exp=(), ty=TUnit} (*COMPLETAR*)
+                        val _ = if tiposIguales tyv tyexp then () else error("Error de tipo en la asignacion de la variable \""^s^"\"", nl) (* ver xq no es una asignacion, quizas no hay q comparar tipos *)
+              in 
+            {exp=(), ty=TUnit} (*READY*)
         | trvar(FieldVar(v, s), nl) =
                 let
                         val {expr,tipor} = trvar v
-                        fun tiporecord (RecordTy lf) = i(*case tabBusca (s, (map (fn t => #name (t)) lf)) of 
-                                                            SOME (Var e) => e
-                                                            | NONE => error ("No existe la variable\""^s^"\" en el record\""^v^"\"",nl)
-                                                            | SOME _ => error ("Deberia ser una variable, es otra cosa")
-                            tiporecord _ = error ("Error de tipo",nl)
-                in tiporecord tipor*)
- 
-            {exp=(), ty=TUnit} (*COMPLETAR*)
+                        fun tiporecord (RecordTy []) = error ("No existe la variable\""^s^"\" en el record \n",nl)
+                          | tiporecord (RecordTy ({name,typ,...}::xs)) = if name = s then typ else tiporecord (RecordTy xs)   
+                          | tiporecord _ = error ("Error de tipo",nl)
+                        val typrec = tiporecord tipor  
+                in {exp=(), ty=TUnit} (*READY*)
         | trvar(SubscriptVar(v, e), nl) = 
+                let
+                        val {ty,...} = trexp e
+                        val {expr,tipov} = trvar v
+                        fun tipoarreglo (ArrayTy s) = case tabBusca s venv of
+                                                           SOME (Var e) => e
+                                                           | SOME _ => error ("Espera una variable y le das funcio",nl)
+                                                           | NONE => error ("\""^s^"\" no esta definido \n",nl)
+                          | tipoarreglo _   = error ("No es un arreglo \n",nl)
+                        val tyv = #ty (tipoarreglo tipov)
+                        val _ = if tiposIguales ty TInt then () else error ("Se espera un Int recibi un \""^ty^"\" \n",nl)
+                in
             {exp=(), ty=TUnit} (*COMPLETAR*)
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) = (*
                         let val {expinit,tyinit} = transExp (tenv,venv,init)
