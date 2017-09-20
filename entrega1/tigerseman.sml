@@ -230,12 +230,12 @@ fun transExp(venv, tenv) =
                         val {ty,...} = trexp e
                         val {exp,ty=tipov} = trvar (v,nl)
                         fun tipoarreglo (TArray (typref,_)) = !typref  
-                          | tipoarreglo _  = error ("Se espera un Tipo arreglo \n",nl)
+                          | tipoarreglo _  = error ("Se espera un tipo arreglo \n",nl)
                         val typarr = (tipoarreglo tipov)
                         val _ = if tiposIguales ty TInt then () else error ("Se espera un Int recibi un \n",nl) (*CUANDO HAGAMOS PPRINT \""^ty^"\" \n",nl) *)
                 in
             		{exp=(), ty=typarr}
-		end (*COMPLETAR*)
+		end (*READY*)
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) = (*
                         let val {expinit,tyinit} = transExp (tenv,venv,init)
                             val tyv = case typ of 
