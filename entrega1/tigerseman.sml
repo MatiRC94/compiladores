@@ -157,11 +157,13 @@ fun transExp(venv, tenv) =
                 val exprs = map (fn{exp, ty} => exp) lexti
                 val {exp, ty=tipo} = hd(rev lexti)
             in    { exp=(), ty=tipo } end
-        | trexp(AssignExp({var=SimpleVar s, exp}, nl)) =
-                {exp=(), ty=TUnit} 
-            (*COMPLETADO SimpleVar*)
         | trexp(AssignExp({var, exp}, nl)) =
-            {exp=(), ty=TUnit} (*COMPLETAR*)
+           let
+	      	val tyvar = #ty (trvar (var,nl))
+                val tyexp = #ty (trexp exp)
+                val _     = if tiposIguales tyvar tyexp then () else error ("se esperaba prittytiper, tyvar y vino tyexp",nl) 
+           in
+                 {exp=(), ty=tyvar}  end (*READY*)
         | trexp(IfExp({test, then', else'=SOME else'}, nl)) =
             let val {exp=testexp, ty=tytest} = trexp test
                 val {exp=thenexp, ty=tythen} = trexp then'
