@@ -1,0 +1,7 @@
+dd borra linea 
+:!command 
+:!make
+/algo busca algo
+:nro va a linea nro
+:set expandtabs
+:set spacetabs
