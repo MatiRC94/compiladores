@@ -238,20 +238,21 @@ fun transExp(venv, tenv) =
                 in
             		{exp=(), ty=typarr}
 		end (*READY*)
-        and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) = (*
-                        let val {expinit,tyinit} = transExp (tenv,venv,init)
-                            val tyv = case typ of 
-                                          NONE => if tyinit = TNIL then error (..) else tyinit
-                                          |SOME nt => 
-                                                     let val t' = transTy nt
-                                                         val _ = if iguales (tyinit,t') then () error (..)
-                                                     in t' end
-                            val venv' = tabinsert tabinserta venv name (VarEntry{ty=tyv})
-                         in venv' end *)
-            (venv, tenv, []) (*COMPLETAR*)
-        | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) =
-            (venv, tenv, []) (*COMPLETAR*)
-
+        and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) =
+                        let val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
+                            val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
+                            val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
+                         in (venv', tenv, []) end (*READY*)
+        | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
+	        let
+		    val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
+                    val t' = case tabBusca (s,tenv) of
+		    		  NONE => error ("\""^s^"\" No esta declarada",pos)
+				  | SOME ss => ss
+                    val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
+		    val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
+		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
+                in (venv',tenv, []) end (*COMPLETAR*)
         | trdec (venv,tenv) (FunctionDec fs) = (*
                         let fun insdecl ({name,params,result,pos,...},venv) =
                                 let val params' = List.map (transTipos tenv) params
@@ -276,3 +277,5 @@ fun transProg ex =
         val _ = (* transExp(tab_vars, tab_tipos) main*) transExp(tab_vars, tab_tipos) ex
     in  print "bien!\n" end
 end
+
+
