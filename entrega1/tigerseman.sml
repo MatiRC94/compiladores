@@ -248,7 +248,7 @@ fun transExp(venv, tenv) =
 	        let
 		    val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                     val t' = case tabBusca (s,tenv) of
-		    		  NONE => error ("\""^s^"\" No esta declarada",pos)
+		    		  NONE => error ("El tipo \""^s^"\" no esta declarado",pos)
 				  | SOME ss => ss
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
 		    val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
