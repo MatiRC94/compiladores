@@ -1,0 +1,3 @@
+let 
+	var a: strong := 4
+in a end
