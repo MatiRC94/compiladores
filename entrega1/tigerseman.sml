@@ -241,6 +241,7 @@ fun transExp(venv, tenv) =
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) =
                         let val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                             val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
+			    val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
                             val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                          in (venv', tenv, []) end (*READY*)
         | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
@@ -250,9 +251,10 @@ fun transExp(venv, tenv) =
 		    		  NONE => error ("\""^s^"\" No esta declarada",pos)
 				  | SOME ss => ss
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
+		    val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
 		    val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
 		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
-                in (venv',tenv, []) end (*COMPLETAR*)
+                in (venv',tenv, []) end (*READY*)
         | trdec (venv,tenv) (FunctionDec fs) = (*
                         let fun insdecl ({name,params,result,pos,...},venv) =
                                 let val params' = List.map (transTipos tenv) params
