@@ -256,6 +256,10 @@ fun transExp(venv, tenv) =
 		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                 in (venv',tenv, []) end (*READY*)
         | trdec (venv,tenv) (FunctionDec fs) = (*
+                        buscar los tipos de los parametros en tenv
+                        buscar result en tenv si existe
+                        insertar todo en venv de - Func of
+                        usar transexp con el nuevo venv
                         let fun insdecl ({name,params,result,pos,...},venv) =
                                 let val params' = List.map (transTipos tenv) params
                                     val result' = case result of
