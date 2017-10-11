@@ -255,7 +255,9 @@ fun transExp(venv, tenv) =
 		    val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
 		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                 in (venv',tenv, []) end (*READY*)
-        | trdec (venv,tenv) (FunctionDec fs) = (*
+        | trdec (venv,tenv) (FunctionDec fs) =
+          
+        (*
                         buscar los tipos de los parametros en tenv
                         buscar result en tenv si existe
                         insertar todo en venv de - Func of
@@ -275,6 +277,14 @@ fun transExp(venv, tenv) =
         | trdec (venv,tenv) (TypeDec ts) =
             (venv, tenv, []) (*COMPLETAR*)
     in trexp end
+fun transTy tenv (NameTy s) pos    = let 
+                                        val ti = case tabBusca (s,tenv) of
+                                                      SOME ss => ss
+                                                     |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
+                                        in ss end
+    transTy tenv (RecordTy fl) pos = 
+    transTy tenv (ArrayTy s) pos   =
+
 fun transProg ex =
     let    val main =
                 LetExp({decs=[FunctionDec[({name="_tigermain", params=[],
