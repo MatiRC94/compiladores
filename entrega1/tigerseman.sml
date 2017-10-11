@@ -282,7 +282,7 @@ fun transTy tenv (NameTy s) pos    = let
                                                       SOME ss => ss
                                                      |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
                                         in ss end
-    transTy tenv (RecordTy fl) pos = 
+    transTy tenv (RecordTy fl) pos = (*hacer fun q recorra la lista*)
     transTy tenv (ArrayTy s) pos   =
 
 fun transProg ex =
