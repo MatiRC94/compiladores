@@ -255,15 +255,19 @@ fun transExp(venv, tenv) =
 		    val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
 		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                 in (venv',tenv, []) end (*READY*)
-        | trdec (venv,tenv) (FunctionDec fs) =
-          
+        | trdec (venv,tenv) (FunctionDec []) = (venv, tenv, []) (*La lista tiene utilidad en la generacion de cod inter*)
+		| trdec (venv, tenv) (FunctionDec f::fs) = 
+            let
+				val listparm =  
+                val typparam = List.map (transTy tenv pos) (#typ(#params f))
+
         (*
                         buscar los tipos de los parametros en tenv
                         buscar result en tenv si existe
                         insertar todo en venv de - Func of
                         usar transexp con el nuevo venv
                         let fun insdecl ({name,params,result,pos,...},venv) =
-                                let val params' = List.map (transTipos tenv) params
+                                let val params' = List.map (transTipos tenv) (#ty params) pos
                                     val result' = case result of
                                                        SOME t => transTipos tenv t
                                                        |NONE => TUnit
@@ -277,13 +281,12 @@ fun transExp(venv, tenv) =
         | trdec (venv,tenv) (TypeDec ts) =
             (venv, tenv, []) (*COMPLETAR*)
     in trexp end
-fun transTy tenv (NameTy s) pos    = let 
+fun transTy tenv pos (NameTy s)    = let 
                                         val ti = case tabBusca (s,tenv) of
                                                       SOME ss => ss
                                                      |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
                                         in ss end
-    transTy tenv (RecordTy fl) pos = (*hacer fun q recorra la lista*)
-    transTy tenv (ArrayTy s) pos   =
+    transTy tenv pos _ = error ("No puede definir tipos dentro de una funcion",pos)
 
 fun transProg ex =
     let    val main =
