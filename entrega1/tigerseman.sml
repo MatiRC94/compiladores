@@ -256,10 +256,13 @@ fun transExp(venv, tenv) =
 		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                 in (venv',tenv, []) end (*READY*)
         | trdec (venv,tenv) (FunctionDec []) = (venv, tenv, []) (*La lista tiene utilidad en la generacion de cod inter*)
-		| trdec (venv, tenv) (FunctionDec f::fs) = 
+		| trdec (venv, tenv) (FunctionDec ({name, params, result, ...},pos)::fs) = 
             let
-				val listparm =  
-                val typparam = List.map (transTy tenv pos) (#typ(#params f))
+                val typparam = List.map (fn x => (transTy tenv pos) (#typ x)) params
+                val result' = case result of
+                                   SOME r => transTy tenv pos (NameTy r)
+                                   | NONE => TUnit
+                val venv' = tabRInserta venv (FunEntry{formals=typparam,result=result',level=(), extern = true })
 
         (*
                         buscar los tipos de los parametros en tenv
