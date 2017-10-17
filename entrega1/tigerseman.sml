@@ -255,16 +255,12 @@ fun transExp(venv, tenv) =
 		    val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
 		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                 in (venv',tenv, []) end (*READY*)
-        | trdec (venv,tenv) (FunctionDec []) = (venv, tenv, []) (*La lista tiene utilidad en la generacion de cod inter*)
-		| trdec (venv, tenv) (FunctionDec ({name, params, result, ...},pos)::fs) = 
-            let
-                val typparam = List.map (fn x => (transTy tenv pos) (#typ x)) params
-                val result' = case result of
-                                   SOME r => transTy tenv pos (NameTy r)
-                                   | NONE => TUnit
-                val venv' = tabRInserta venv (FunEntry{formals=typparam,result=result',level=(), extern = true })
+        | trdec (venv,tenv) (FunctionDec (xs)
+          let 
+                val venv' = auxDec (venv,tenv) xs
+           (*     falta meter los parametros en varEntry
 
-        (*
+           
                         buscar los tipos de los parametros en tenv
                         buscar result en tenv si existe
                         insertar todo en venv de - Func of
@@ -284,6 +280,15 @@ fun transExp(venv, tenv) =
         | trdec (venv,tenv) (TypeDec ts) =
             (venv, tenv, []) (*COMPLETAR*)
     in trexp end
+fun  auxDec (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*)
+   | auxDec (venv,tenv)  (({name, params, result, ...},pos)::fs) = 
+            let
+                val typparam = List.map (fn x => (transTy tenv pos) (#typ x)) params
+                val result' = case result of
+                                   SOME r => transTy tenv pos (NameTy r)
+                                   | NONE => TUnit
+                val venv' = tabRInserta venv (FunEntry{formals=typparam,result=result',level=(), extern = true,tigertemp.newlabel()})
+           in auxDec (venv',tenv) fs end  
 fun transTy tenv pos (NameTy s)    = let 
                                         val ti = case tabBusca (s,tenv) of
                                                       SOME ss => ss
