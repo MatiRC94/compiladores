@@ -91,7 +91,6 @@ fun transExp(venv, tenv) =
                         end
 	        val _ = if t then () else error("Error de tipo en  \""^func^"\"", nl)
             in
-
                 {exp=(), ty=trf} (*COMPLETADO*)
             end
         | trexp(OpExp({left, oper=EqOp, right}, nl)) =
@@ -241,24 +240,25 @@ fun transExp(venv, tenv) =
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) =
                         let val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                             val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
-			    val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
+			                val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
                             val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                          in (venv', tenv, []) end (*READY*)
         | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
 	        let
-		    val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
+		             val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                     val t' = case tabBusca (s,tenv) of
-		    		  NONE => error ("El tipo \""^s^"\" no esta declarado",pos)
-				  | SOME ss => ss
+		                		  NONE => error ("El tipo \""^s^"\" no esta declarado",pos)
+				                  | SOME ss => ss
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
-		    val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
-		    val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
-		    val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
-                in (venv',tenv, []) end (*READY*)
-        | trdec (venv,tenv) (FunctionDec (xs))
+		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
+		            val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
+		            val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
+           in (venv',tenv, []) end (*READY *)
+        | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
-                val venv' = auxDec (venv,tenv) (xs)
-          in trdecfun (venv',tenv)(FunctionDec xs) end 
+                val venv' = auxVenv (venv,tenv) xs
+                val _ = trdecfun (venv',tenv)(FunctionDec xs)
+          in (venv',tenv,[]) end
            (*     falta meter los parametros en varEntry
 
            
@@ -276,40 +276,43 @@ fun transExp(venv, tenv) =
                             val venv' = List.foldr (fn(d,env) => algoDec(d,env) venv if end (?? esta linea y la que sigue tan flasheada
                             fun type Body body env transExp(tenv,env,body)
                             val emptyval = List.map (fn{body,...} => transExp(tenv,venv,body) if
-                            *)
-            (venv, tenv, []) (*COMPLETAR*)
-        | trdec (venv,tenv) (TypeDec ts) =
-            (venv, tenv, []) (*COMPLETAR*)
-    in trexp end
-fun  auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
-   | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
+                            *) (*COMPLETAR*)
+        | trdec (venv,tenv) (TypeDec ts) = (venv, tenv, []) (*COMPLETAR*)
+        in trexp end
+        and auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
+           | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
              let
                  val typparam = List.map (fn x => (transTy tenv pos) (#typ x)) params
                  val result' = case result of
                                     SOME r => transTy tenv pos (NameTy r)
                                   | NONE => TUnit
-                 val venv' = tabRInserta (name ,(Func{formals=typparam,result=result',level=(), extern = true,tigertemp.newlabel()}),venv)
+                 val venv' = tabRInserta (name ,(Func{formals=typparam,result=result',level=(), extern = true,label = tigertemp.newlabel()}),venv)
              in auxVenv (venv',tenv) fs end
-fun auxBody venv tenv (a,b) = ()
-    auxBody venv tenv ({name,params,result,body},pos) = 
-        let
-            fun f x y = (tabRInserta((#name y,Var(trasnTy tenv pos (#typ y)),(tabRInserta ((#name x,Var(transTy(tenv pos (#typ x)))),venv)))))
-            val venv'' = foldl f params
-            val {exp,ty} = transExp (venv'',tenv) body
-        in checkTipos res ty end
-fun  trdecfun  (venv,tenv) (FunctionDec [])      = ()
-     trdecfun  (venv,tenv) (FunctionDec (x::xs)) = 
-     let 
-        
-
-
-fun checkTipos t1 t2 pos = if tiposIguales t1 t2  then () else error ("Error de tipos se espera t1 y me diste t2",pos)(*hacer pretty printer*)
-fun transTy tenv pos (NameTy s)    = let 
-                                        val ti = case tabBusca (s,tenv) of
-                                                      SOME ss => ss
-                                                     |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
-                                        in ss end
-    transTy tenv pos _ = error ("No puede definir tipos dentro de una funcion",pos)
+        and auxBody venv tenv ({name,params,result,body},pos) = 
+            let
+                val venv''   = foldl (auxBodyFold venv tenv pos) venv params
+                val {exp,ty} = transExp (venv'',tenv) body
+            in 
+                checkTipos result ty 
+            end
+        and auxBodyFold venv tenv pos (x,y) = let
+                                                val venv' = tabRInserta (#name x,(Var (transTy tenv pos (#typ x))),venv) 
+                                              in 
+                                                tabRInserta (#name y,(Var (trasnTy tenv pos (#typ y))),venv')
+                                              end
+        and trdecfun  (venv,tenv) (FunctionDec [])      = ()
+          | trdecfun  (venv,tenv) (FunctionDec (x::xs)) = 
+            let 
+               val _ = auxBody venv tenv x
+            in trdecfun (venv,tenv) xs end        
+        and checkTipos t1 t2 pos = if tiposIguales t1 t2  then () else error ("Error de tipos se espera t1 y me diste t2",pos)(*hacer pretty printer*)
+        and transTy tenv pos (NameTy s)    = 
+            let 
+                val ti = case tabBusca (s,tenv) of
+                              SOME ss => ss
+                              |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
+            in ti  end
+    | transTy tenv pos _ = error ("No puede definir tipos dentro de una funcion",pos)
 
 fun transProg ex =
     let    val main =
@@ -319,5 +322,4 @@ fun transProg ex =
         val _ = (* transExp(tab_vars, tab_tipos) main*) transExp(tab_vars, tab_tipos) ex
     in  print "bien!\n" end
 end
-
 
