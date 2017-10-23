@@ -257,7 +257,7 @@ fun transExp(venv, tenv) =
         | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
                 val venv' = auxVenv (venv,tenv) xs
-                val _ = trdecfun (venv',tenv)(FunctionDec xs)
+                val _ = trdecfun (venv',tenv) xs
           in (venv',tenv,[]) end
            (*     falta meter los parametros en varEntry
 
@@ -280,40 +280,39 @@ fun transExp(venv, tenv) =
         | trdec (venv,tenv) (TypeDec ts) = (venv, tenv, []) (*COMPLETAR*)
         in trexp end
         and auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
-           | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
+          | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
              let
                  val typparam = List.map (fn x => (transTy tenv pos) (#typ x)) params
                  val result' = case result of
                                     SOME r => transTy tenv pos (NameTy r)
-                                  | NONE => TUnit
+                                  | NONE   => TUnit
                  val venv' = tabRInserta (name ,(Func{formals=typparam,result=result',level=(), extern = true,label = tigertemp.newlabel()}),venv)
              in auxVenv (venv',tenv) fs end
         and auxBody venv tenv ({name,params,result,body},pos) = 
             let
-                val venv''   = foldl (auxBodyFold venv tenv pos) venv params
+                val venv''   = foldl (auxBodyFold tenv pos) venv params
                 val {exp,ty} = transExp (venv'',tenv) body
+                val result' = auxResult result tenv pos
             in 
-                checkTipos result ty 
+                checkTipos result' ty 
             end
-        and auxBodyFold venv tenv pos (x,y) = let
-                                                val venv' = tabRInserta (#name x,(Var (transTy tenv pos (#typ x))),venv) 
-                                              in 
-                                                tabRInserta (#name y,(Var (trasnTy tenv pos (#typ y))),venv')
-                                              end
-        and trdecfun  (venv,tenv) (FunctionDec [])      = ()
-          | trdecfun  (venv,tenv) (FunctionDec (x::xs)) = 
+        and auxBodyFold tenv pos (x,y) = tabRInserta (#name x, (Var {ty = (transTy tenv pos (#typ x))}),y) 
+                      
+        and trdecfun  (venv,tenv)  []   = ()
+          | trdecfun  (venv,tenv) (x::xs) = 
             let 
                val _ = auxBody venv tenv x
-            in trdecfun (venv,tenv) xs end        
-        and checkTipos t1 t2 pos = if tiposIguales t1 t2  then () else error ("Error de tipos se espera t1 y me diste t2",pos)(*hacer pretty printer*)
+            in trdecfun (venv,tenv)  xs end        
+        and checkTipos t1 t2 pos = if tiposIguales t1 t2  then () else error("Error de tipos se espera t1 y me diste t2",pos)(*hacer pretty printer*)
         and transTy tenv pos (NameTy s)    = 
             let 
                 val ti = case tabBusca (s,tenv) of
                               SOME ss => ss
-                              |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
+                             |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
             in ti  end
-    | transTy tenv pos _ = error ("No puede definir tipos dentro de una funcion",pos)
-
+          | transTy tenv pos _ = error ("No puede definir tipos dentro de una funcion",pos)
+        and auxResult (SOME s) tenv pos = transTy tenv pos (NameTy s)
+            auxResult NONE a b  = TUnit
 fun transProg ex =
     let    val main =
                 LetExp({decs=[FunctionDec[({name="_tigermain", params=[],
