@@ -67,10 +67,18 @@ fun tiposIguales (TRecord _) TNil = true
         (* end *)raise Fail "No debería pasar! (2)"
   | tiposIguales a b = (a=b)
 (*  | tiposIguales _ = false*)
+fun error(s, p) = raise Fail ("Error -- línea "^Int.toString(p)^": "^s^"\n")
+
+fun checkTipos t1 t2 pos = 	if tiposIguales t1 t2 
+					then () 
+					else error("Error de tipos, se espera "
+							^ printTy (t1) 
+							^ " y me diste "
+							^ printTy (t2),pos)
+			
+
 fun transExp(venv, tenv) =
-    let fun error(s, p) = raise Fail ("Error -- línea "^Int.toString(p)^": "^s^"\n")
-        fun checkTipos t1 t2 pos = if tiposIguales t1 t2  then () else error("Error de tipos se espera"^ printTy (t1) ^" y me diste"^ printTy (t2),pos)
-        fun trexp(VarExp v) = trvar(v)
+    let fun trexp(VarExp v) = trvar(v)
         | trexp(UnitExp _) = {exp=(), ty=TUnit}
         | trexp(NilExp _)= {exp=(), ty=TNil}
         | trexp(IntExp(i, _)) = {exp=(), ty=TInt}
@@ -162,7 +170,7 @@ fun transExp(venv, tenv) =
            let
 	      	val tyvar = #ty (trvar (var,nl))
                 val tyexp = #ty (trexp exp)
-                val _     = if tiposIguales tyvar tyexp then () else error ("se esperaba prittytiper, tyvar y vino tyexp",nl) 
+                val _     = checkTipos tyvar tyexp nl
            in
                  {exp=(), ty=tyvar}  end (*READY*)
         | trexp(IfExp({test, then', else'=SOME else'}, nl)) =
@@ -250,7 +258,7 @@ fun transExp(venv, tenv) =
 		             val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                     val t' = case tabBusca (s,tenv) of
 		                		  NONE => error ("El tipo \""^s^"\" no esta declarado",pos)
-				                  | SOME ss => ss
+				                | SOME ss => ss
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
 		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
 		            val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
@@ -261,24 +269,7 @@ fun transExp(venv, tenv) =
                 val venv' = auxVenv (venv,tenv) xs
                 val _ = trdecfun (venv',tenv) xs
           in (venv',tenv,[]) end
-           (*     falta meter los parametros en varEntry
 
-           
-                        buscar los tipos de los parametros en tenv
-                        buscar result en tenv si existe
-                        insertar todo en venv de - Func of
-                        usar transexp con el nuevo venv
-                        let fun insdecl ({name,params,result,pos,...},venv) =
-                                let val params' = List.map (transTipos tenv) (#ty params) pos
-                                    val result' = case result of
-                                                       SOME t => transTipos tenv t
-                                                       |NONE => TUnit
-                                    val venv' = tabinserta venv (FunEnty{formals=params',result=result'})
-                                in venv' end
-                            val venv' = List.foldr (fn(d,env) => algoDec(d,env) venv if end (?? esta linea y la que sigue tan flasheada
-                            fun type Body body env transExp(tenv,env,body)
-                            val emptyval = List.map (fn{body,...} => transExp(tenv,venv,body) if
-                            *) (*COMPLETAR*)
         | trdec (venv,tenv) (TypeDec ts) = (venv, tenv, []) (*COMPLETAR*)
       and auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
         | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
@@ -295,7 +286,7 @@ fun transExp(venv, tenv) =
               val {exp,ty} = transExp (venv'',tenv) body
               val result' = auxResult result tenv pos
           in 
-              checkTipos result' ty 
+              checkTipos result' ty pos
           end
       and auxBodyFold tenv pos (x,y) = tabRInserta (#name x, (Var {ty = (transTy tenv pos (#typ x))}),y) 
                   
