@@ -5,6 +5,7 @@ open tigerabs
 open tigersres
 open tigertab
 open printty
+open tigertopsort
 
 type expty = {exp: unit, ty: Tipo}
 
@@ -94,8 +95,8 @@ fun transExp(venv, tenv) =
                 val lta1 = map (fn {ty, ...} => ty) lta 
                 val _ = if (length lta1) = (length ltaf) then () else error("Error cantidad de argumentos en \""^func^"\"", nl)
                 val t = let 
-                            fun tipolis (x::xs) (y::ys) = (tiposIguales x y) andalso tipolis xs ys (*short circuit andalso*)
-                            | tipolis _ _ = true (* agregar error de tipo cuando hagamos prityprint de tipos*)
+                            fun tipolis (x::xs) (y::ys) = ((checkTipos x y nl); true) andalso tipolis xs ys (*short circuit andalso*)
+                              | tipolis _ _ = true (* Probar chequeo de tipos*)
                         in
                             tipolis lta1 ltaf
                         end
@@ -224,7 +225,7 @@ fun transExp(venv, tenv) =
                                     | SOME _ => error ("Espera una variable y le das una funcion",nl)
                                     | NONE => error("No existe la variable \""^s^"\"", nl)
                         val tyv = #ty(v)
-              in (*Ver ty de devolucion*)
+              in 
             {exp=(), ty=tyv} 
 	      end (*READY*)
         | trvar(FieldVar(v, s), nl) =
@@ -243,7 +244,7 @@ fun transExp(venv, tenv) =
                         fun tipoarreglo (TArray (typref,_)) = !typref  
                           | tipoarreglo _  = error ("Se espera un tipo arreglo \n",nl)
                         val typarr = (tipoarreglo tipov)
-                        val _ = if tiposIguales ty TInt then () else error ("Se espera un Int recibi un \n",nl) (*CUANDO HAGAMOS PPRINT \""^ty^"\" \n",nl) *)
+                        val _ = (checkTipos ty TInt nl)  (* verificar chequeo de tipos *)
                 in
             		{exp=(), ty=typarr}
 		end (*READY*)
@@ -261,16 +262,22 @@ fun transExp(venv, tenv) =
 				                | SOME ss => ss
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
 		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
-		            val _ = if tiposIguales tyv t' then () else error ("Se esperaba el tipo t' y me diste tyinit ",pos)(*hacer prettyprint*)
+		            val _ = checkTipos tyv t' pos (* verif che ti*)
 		            val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
            in (venv',tenv, []) end (*READY *)
         | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
                 val venv' = auxVenv (venv,tenv) xs
                 val _ = trdecfun (venv',tenv) xs
-          in (venv',tenv,[]) end
+          in (venv',tenv,[]) end  (*READY*)
 
-        | trdec (venv,tenv) (TypeDec ts) = (venv, tenv, []) (*COMPLETAR*)
+        | trdec (venv,tenv) (TypeDec ts) = 
+            let
+                val ts' = map (fn (x,pos) => x) ts
+                val tenv' = fijaTipos ts' tenv
+            in (venv, tenv', []) end (*COMPLETAR*)
+
+        (*Funciones Auxiliares para FunctionDec *)    
       and auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
         | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
           let
