@@ -173,7 +173,7 @@ fun transExp(venv, tenv) =
                 val tyexp = #ty (trexp exp)
                 val _     = checkTipos tyvar tyexp nl
            in
-                 {exp=(), ty=tyvar}  end (*READY*)
+                 {exp=(), ty=TUnit}  end (*READY*)
         | trexp(IfExp({test, then', else'=SOME else'}, nl)) =
             let val {exp=testexp, ty=tytest} = trexp test
                 val {exp=thenexp, ty=tythen} = trexp then'
@@ -199,14 +199,14 @@ fun transExp(venv, tenv) =
                 else error("El cuerpo de un while no puede devolver un valor", nl)
             end
         | trexp(ForExp({var, escape, lo, hi, body}, nl)) =
-                        let (*val {explo,tylo} = trexp lo 
-                            val _ = if esInt tylo then () else error (...)
-                            val {exphi,tyhi} = trexp hi
-                            val _ = if esInt tyhi then () else error(...)
-                            val venv' = tabinsert venv var(VarEntry {ty= TIntRo})
-                            val {empbody,tybody} = transExp (tenv,venv',body)
-                            val _ = if tybody = if tybody=TUnit then () else error (..)*)
-            in {exp=(), ty=TUnit} end (*COMPLETAR*)
+                        let val {exp=explo,ty=tylo} = trexp lo 
+                            val _ = checkTipos TInt tylo nl
+                            val {exp=exphi,ty=tyhi} = trexp hi
+                            val _ = (checkTipos TInt tyhi nl)
+                            val venv' = tabRInserta (var ,Var {ty = tylo}, venv)
+                            val {exp=empbody,ty=tybody} = transExp (venv',tenv) body
+                            val _ = checkTipos TUnit tybody nl
+            in {exp=(), ty=TUnit} end (*COMPLETADO*)
         | trexp(LetExp({decs, body}, _)) =
             let
                 val (venv', tenv', _) = List.foldl (fn (d, (v, t, _)) => trdec(v, t) d) (venv, tenv, []) decs
