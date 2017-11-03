@@ -3,7 +3,6 @@ open tigergrm
 open tigerescap
 open tigerseman
 open BasicIO Nonstdio
-open ejercicio4
 
 
 fun lexstream(is: instream) =
@@ -33,7 +32,6 @@ fun main(args) =
 		val _ = if arbol then tigerpp.exprAst expr else ()
 	in
 		transProg(expr);
-                print(toString (maxargsExp expr));
 		print "\nyes!!\n"
 	end	handle Fail s => print("Fail: "^s^"\n")
 

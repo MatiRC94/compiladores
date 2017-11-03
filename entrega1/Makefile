@@ -40,6 +40,7 @@ tigerlex.sml: tigerlex.lex
 	$(MOSMLLEX) tigerlex.lex
 
 clean:
+	$(REMOVE) tiger
 	$(REMOVE) Makefile.bak
 	$(REMOVE) tigergrm.output
 	$(REMOVE) tigergrm.sig
