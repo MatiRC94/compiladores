@@ -1,0 +1,4 @@
+let 
+	function fibonacci(n:int):int  = if n = 0 then print ("hola") else fibonacci2(n-1)
+	function fibonacci2(n:int) = fibonacci(n)
+in fibonacci(6) end
