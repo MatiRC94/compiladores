@@ -96,7 +96,7 @@ fun transExp(venv, tenv) =
                 val _ = if (length lta1) = (length ltaf) then () else error("Error cantidad de argumentos en \""^func^"\"", nl)
                 val t = let 
                             fun tipolis (x::xs) (y::ys) = ((checkTipos x y nl); true) andalso tipolis xs ys (*short circuit andalso*)
-                              | tipolis _ _ = true (* Probar chequeo de tipos*)
+                              | tipolis _ _ = true 
                         in
                             tipolis lta1 ltaf
                         end
@@ -262,7 +262,7 @@ fun transExp(venv, tenv) =
 				                | SOME ss => ss
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
 		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
-		            val _ = checkTipos tyv t' pos (* verif che ti*)
+		            val _ = checkTipos tyv t' pos 
 		            val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
            in (venv',tenv, []) end (*READY *)
         | trdec (venv,tenv) (FunctionDec (xs)) =
