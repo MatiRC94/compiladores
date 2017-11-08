@@ -102,7 +102,7 @@ fun transExp(venv, tenv) =
                         end
 	        val _ = if t then () else error("Error de tipo en  \""^func^"\"", nl)
             in
-                {exp=(), ty=trf} (*COMPLETADO*)
+                {exp=(), ty=trf} (*READY*)
             end
         | trexp(OpExp({left, oper=EqOp, right}, nl)) =
             let
@@ -206,7 +206,7 @@ fun transExp(venv, tenv) =
                             val venv' = tabRInserta (var ,Var {ty = tylo}, venv)
                             val {exp=empbody,ty=tybody} = transExp (venv',tenv) body
                             val _ = checkTipos TUnit tybody nl
-            in {exp=(), ty=TUnit} end (*COMPLETADO*)
+            in {exp=(), ty=TUnit} end (*READY*)
         | trexp(LetExp({decs, body}, _)) =
             let
                 val (venv', tenv', _) = List.foldl (fn (d, (v, t, _)) => trdec(v, t) d) (venv, tenv, []) decs
@@ -215,9 +215,20 @@ fun transExp(venv, tenv) =
                 {exp=(), ty=tybody}
             end
         | trexp(BreakExp nl) =
-            {exp=(), ty=TUnit} (*COMPLETAR*)
+            {exp=(), ty=TUnit} (*READY*)
         | trexp(ArrayExp({typ, size, init}, nl)) =
-            {exp=(), ty=TUnit} (*COMPLETAR*)
+            let
+                val {exp = expsize, ty=tysize} = trexp size
+                val _  = checkTipos TInt tysize nl
+                val {exp = expinit, ty = tyinit} = trexp init
+                val tytyp = transTy tenv nl (NameTy typ)(*hack*)
+                val tytyp' = case tytyp of
+                                  TArray (t,u) => !t
+                                  | _ => error ("No deberia pasar", nl)
+                val _  = checkTipos tytyp' tyinit nl
+            in
+                {exp=(), ty=tytyp} (*READY*)
+            end
         and trvar(SimpleVar s, nl) =
               let 
                         val v = case tabBusca(s, venv) of
@@ -275,7 +286,7 @@ fun transExp(venv, tenv) =
             let
                 val ts' = map (fn (x,pos) => x) ts
                 val tenv' = fijaTipos ts' tenv
-            in (venv, tenv', []) end (*COMPLETAR*)
+            in (venv, tenv', []) end (*READY*)
 
         (*Funciones Auxiliares para FunctionDec *)    
       and auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
