@@ -163,7 +163,8 @@ fun transExp(venv, tenv) =
                 {exp=(), ty=tyr}
             end
         | trexp(SeqExp(s, nl)) =
-            let    val lexti = map trexp s
+            let    
+                val lexti = map trexp s
                 val exprs = map (fn{exp, ty} => exp) lexti
                 val {exp, ty=tipo} = hd(rev lexti)
             in    { exp=(), ty=tipo } end
@@ -262,7 +263,7 @@ fun transExp(venv, tenv) =
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) =
                         let val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                             val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
-			                val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
+                            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
                             val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
                          in (venv', tenv, []) end (*READY*)
         | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
