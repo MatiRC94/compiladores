@@ -11,4 +11,6 @@ datatype EnvEntry =
 	| Func of {level: tigertrans.level, label: tigertemp.label,
 		formals: Tipo list, result: Tipo, extern: bool}
 
+(*val mainLevel = () *)
+
 end

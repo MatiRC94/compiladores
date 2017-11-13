@@ -25,8 +25,8 @@ EXEFILE=
 .SUFFIXES : .sig .sml .ui .uo
 
 GRALOBJS= tigerabs.uo tigergrm.uo tigerlex.uo tigermain.uo \
-	tigernlin.uo tigerpp.uo tigerescap.uo tigertab.uo tigerseman.uo tigertemp.uo tigertopsort.uo tigermuestratipos.uo ejercicio4.uo \
-	printty.uo
+	tigernlin.uo tigerpp.uo tigerescap.uo tigertab.uo tigerseman.uo tigertemp.uo tigertopsort.uo tigermuestratipos.uo \
+	printty.uo tigertree.uo tigerframe.uo tigertrans.uo tigerit.uo tigerpila.uo
 
 all: tiger
 
@@ -71,7 +71,8 @@ tigerlex.uo: tigergrm.ui tigernlin.uo
 tigertab.uo: tigertab.ui 
 tigerescap.ui: tigerabs.uo 
 tigermuestratipos.ui: tigertips.uo 
-tigerseman.uo: tigerseman.ui tigersres.uo tigertab.ui tigerabs.uo printty.uo tigertopsort.uo 
+tigerseman.uo: tigerseman.ui tigersres.uo tigertab.ui tigerabs.uo printty.uo tigertopsort.uo \
+    tigertrans.ui tigerpila.ui
 tigergrm.ui: tigerabs.uo 
 tigerseman.ui: tigerabs.uo 
 tigertopsort.ui: tigertab.ui tigertips.uo tigerabs.uo 
@@ -79,8 +80,17 @@ tigertopsort.uo: tigertopsort.ui tigertab.ui tigertips.uo tigerabs.uo \
     tigermuestratipos.ui 
 tigertemp.uo: tigertemp.ui 
 tigerescap.uo: tigerescap.ui tigertab.ui tigerabs.uo 
-tigersres.uo: tigertab.ui tigertips.uo tigertemp.ui tigerabs.uo 
-tigermain.uo: tigerseman.ui tigerescap.ui ejercicio4.uo tigergrm.ui \
+tigersres.uo: tigertab.ui tigertips.uo tigertemp.ui tigerabs.uo tigertrans.ui
+tigermain.uo: tigerseman.ui tigerescap.ui tigergrm.ui \
     tigerlex.uo tigerpp.uo 
 tigergrm.uo: tigergrm.ui tigernlin.uo tigerabs.uo 
-tigerpp.uo: tigerabs.uo 
+tigerpp.uo: tigerabs.uo
+tigertrans.uo: tigertrans.ui tigertree.uo tigerpila.ui tigerframe.ui \
+    tigerit.uo tigertemp.ui tigerabs.uo
+tigertrans.ui: tigertree.uo tigerframe.ui tigertemp.ui tigerabs.uo
+tigerframe.ui: tigertree.uo tigertemp.ui
+tigerframe.uo: tigerframe.ui tigertree.uo tigertemp.ui
+tigerit.uo: tigertree.uo tigertab.ui
+tigertree.uo: tigertemp.ui
+tigerpila.uo: tigerpila.ui
+
