@@ -8,8 +8,8 @@ MOSMLYACC=mosmlyac -v
 
 GCC=gcc
 CFLAGS= -g
-MOSMLC=${MOSMLHOME}/bin/mosmlc -c -liberal
-MOSMLL=${MOSMLHOME}/bin/mosmlc
+MOSMLC= mosmlc -c -liberal
+MOSMLL= mosmlc
 
 # Unix
 REMOVE=rm -f
@@ -82,7 +82,7 @@ tigerseman.uo: tigerseman.ui tigersres.uo tigertab.ui tigerpila.ui \
 tigergrm.uo: tigergrm.ui tigernlin.uo tigerabs.uo 
 tigerpila.uo: tigerpila.ui 
 tigersres.uo: tigertab.ui tigertips.uo tigertemp.ui tigerabs.uo \
-    tigertrans.ui 
+              tigertrans.ui   
 tigertab.uo: tigertab.ui 
 tigermain.uo: tigerseman.ui tigerescap.ui tigergrm.ui tigerlex.uo \
     tigerpp.uo 
