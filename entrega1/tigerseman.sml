@@ -82,6 +82,7 @@
          
          
          (* tipoReal YA NO TOMA EL ENTORNO DE TIPOS *)
+         (* Version anterior. No Usar *)
         (*fun tipoReal (TTipo (s, ref (SOME (t)))) = tipoReal t
           | tipoReal t = t*)
           
@@ -179,6 +180,7 @@
                                 | GeOp => if tipoReal(tyl,tenv)=TInt orelse tipoReal(tyl,tenv)=TString then {exp=(),ty=TInt} else error("Error de tipos", nl)
                                 | _ => raise Fail "No debería pasar! (3)"
                                 *)
+                                (* Comenzamos a darle sentido a exp. Deja de ser () *)
                                 PlusOp => if tipoReal (tyl,tenv)=TInt then {exp=binOpIntExp {left=expl, oper=oper, right=expr},ty=TInt} else error("Error de tipos", nl)
                                 | MinusOp => if tipoReal (tyl, tenv)=TInt then {exp=binOpIntExp {left=expl, oper=oper, right=expr},ty=TInt} else error("Error de tipos", nl)
                                 | TimesOp => if tipoReal (tyl,tenv)=TInt then {exp=binOpIntExp {left=expl, oper=oper, right=expr},ty=TInt} else error("Error de tipos", nl)
@@ -274,9 +276,9 @@
         | trexp(LetExp({decs, body}, _)) =
             let
                 val (venv', tenv', _) = List.foldl (fn (d, (v, t, _)) => trdec(v, t) d) (venv, tenv, []) decs
-                val {exp=expbody,ty=tybody}=transExp (venv', tenv') body
+                val {exp=expbody,ty=tybody} = transExp (venv', tenv') body
             in 
-                {exp=seqExp(expdecs@[expbody]), ty=tybody}
+                {exp=nilExp()(*seqExp(expdecs@[expbody])*), ty=tybody}
             end
         | trexp(BreakExp nl) =
             {exp=nilExp(), ty=TUnit} (*READY*)
@@ -327,8 +329,9 @@
                         let val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                             val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
                             val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
-                            val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
-                         in (venv', tenv, []) end (*READY*)
+			    val lvl = topLevel()
+                            val venv' = tabRInserta (name,(Var {ty=tyv,acces = allocLocal lvl escape,level=lvl}),venv)
+                         in (venv', tenv, expinit) end (*READY*)
         | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
 	        let
 		             val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
@@ -338,13 +341,14 @@
                     val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
 		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
 		            val _ = checkTipos tyv t' pos 
-		            val venv' = tabRInserta (name,(Var {ty=tyv}),venv)
-           in (venv',tenv, []) end (*READY *)
+		            val lvl = topLevel()
+		            val venv' = tabRInserta (name,(Var {ty=tyv,acces = allocLocal lvl escape,level=lvl}),venv)
+           in (venv',tenv, expinit) end (*READY *)
         | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
-                val venv' = auxVenv (venv,tenv) xs
-                val _ = trdecfun (venv',tenv) xs
-          in (venv',tenv,[]) end  (*READY*)
+                val venv' = auxVenv (venv,tenv) xs []
+                val explist = trdecfun (venv',tenv) xs []
+          in (venv',tenv,explist) end  (*MEGAREADY*)
 
         | trdec (venv,tenv) (TypeDec ts) = 
             let
@@ -366,17 +370,23 @@
           let
               val venv''   = foldl (auxBodyFold tenv pos) venv params
               val {exp,ty} = transExp (venv'',tenv) body
-              val result' = auxResult result tenv pos
+              val result'  = auxResult result tenv pos
+	      val _        = checkTipos result' ty pos
           in 
-              checkTipos result' ty pos
+              exp   
           end
-      and auxBodyFold tenv pos (x,y) = tabRInserta (#name x, (Var {ty = (transTy tenv pos (#typ x))}),y) 
+      and auxBodyFold tenv pos (x,y) = let
+				           val tyexp = transTy tenv pos (#typ x)
+				           val lvl   = topLevel()
+				       in
+					   tabRInserta (#name x, (Var {ty = tyexp, acces = allocArgs lvl escape ,level = lvl}),y) 
+				       end
                   
-      and trdecfun  (venv,tenv)  []   = ()
-        | trdecfun  (venv,tenv) (x::xs) = 
+      and trdecfun  (venv,tenv)  [] es     = es
+        | trdecfun  (venv,tenv) (x::xs) es =   
           let 
-             val _ = auxBody venv tenv x
-          in trdecfun (venv,tenv)  xs end        
+             val exp = auxBody venv tenv x
+          in trdecfun (venv,tenv) xs (exp::es) end        
       and transTy tenv pos (NameTy s)    = 
           let 
               val ti = case tabBusca (s,tenv) of
