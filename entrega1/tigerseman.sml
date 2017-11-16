@@ -266,7 +266,8 @@
                             val _ = checkTipos TInt tylo nl
                             val {exp=exphi,ty=tyhi} = trexp hi
                             val _ = (checkTipos TInt tyhi nl)
-                            val venv' = tabRInserta (var ,Var {ty = tylo}, venv)
+                            val toppila = topLevel()
+                            val venv' = tabRInserta (var ,Var {ty = tylo, level = getActualLev(), access =  allocLocal toppila true}, venv)
                             val {exp=empbody,ty=tybody} = transExp (venv',tenv) body
                             val _ = checkTipos TUnit tybody nl
             in {exp=nilExp(), ty=TUnit} end (*READY*)
