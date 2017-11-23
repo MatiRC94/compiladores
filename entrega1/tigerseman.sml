@@ -330,7 +330,8 @@
                             val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
                             val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
 			    val lvl = topLevel()
-                            val venv' = tabRInserta (name,(Var {ty=tyv,acces = allocLocal lvl escape,level=lvl}),venv)
+                            val numberLev = getActualLev()
+                            val venv' = tabRInserta (name,(Var {ty=tyv,access = allocLocal lvl (!escape),level=numberLev}),venv)
                          in (venv', tenv, expinit) end (*READY*)
         | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
 	        let
@@ -342,12 +343,13 @@
 		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
 		            val _ = checkTipos tyv t' pos 
 		            val lvl = topLevel()
-		            val venv' = tabRInserta (name,(Var {ty=tyv,acces = allocLocal lvl escape,level=lvl}),venv)
+                            val numberLev = getActualLev()
+		            val venv' = tabRInserta (name,(Var {ty=tyv,access = allocLocal lvl (!escape),level=numberLev}),venv)
            in (venv',tenv, expinit) end (*READY *)
         | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
-                val venv' = auxVenv (venv,tenv) xs []
-                val explist = trdecfun (venv',tenv) xs []
+                val venv' = auxVenv (venv,tenv) xs 
+                val explist = trdecfun (venv',tenv) xs 
           in (venv',tenv,explist) end  (*MEGAREADY*)
 
         | trdec (venv,tenv) (TypeDec ts) = 
@@ -357,8 +359,8 @@
             in (venv, tenv', []) end (*READY*)
 
         (*Funciones Auxiliares para FunctionDec *)    
-      and auxVenv (venv,tenv) [] = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
-        | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) = 
+      and auxVenv ((venv,tenv) : (venv * tenv)) [] : venv = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
+        | auxVenv (venv,tenv) (({name, params, result, ...},pos)::fs) : venv = 
           let
               val typparam = List.map (fn x => (transTy tenv pos) (#typ x)) params
               val result' = case result of
