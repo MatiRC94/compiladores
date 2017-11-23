@@ -348,9 +348,9 @@
            in (venv',tenv, expinit) end (*READY *)
         | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
-                val venv' = auxVenv (venv,tenv) xs 
-                val explist = trdecfun (venv',tenv) xs 
-          in (venv',tenv,explist) end  (*MEGAREADY*)
+                val venv' = auxVenv (venv,tenv) xs
+                val _ = trdecfun (venv',tenv) xs
+          in (venv',tenv,[]) end  (*READY*)
 
         | trdec (venv,tenv) (TypeDec ts) = 
             let
@@ -366,29 +366,34 @@
               val result' = case result of
                                  SOME r => transTy tenv pos (NameTy r)
                                | NONE   => TUnit
-              val venv' = tabRInserta (name ,(Func{formals=typparam,result=result',level=(), extern = true,label = tigertemp.newlabel()}),venv)
+              val numberLev = topLevel()
+              val venv' = tabRInserta (name ,(Func{formals=typparam,result=result',level=numberLev, extern = true,label = tigertemp.newlabel()}),venv)
           in auxVenv (venv',tenv) fs end
       and auxBody venv tenv ({name,params,result,body},pos) = 
           let
               val venv''   = foldl (auxBodyFold tenv pos) venv params
-              val {exp,ty} = transExp (venv'',tenv) body
+              val {exp=expr,ty}  = transExp (venv'',tenv) body
               val result'  = auxResult result tenv pos
 	      val _        = checkTipos result' ty pos
           in 
-              exp   
+              expr   
           end
-      and auxBodyFold tenv pos (x,y) = let
-				           val tyexp = transTy tenv pos (#typ x)
-				           val lvl   = topLevel()
-				       in
-					   tabRInserta (#name x, (Var {ty = tyexp, acces = allocArgs lvl escape ,level = lvl}),y) 
-				       end
+      and auxBodyFold tenv pos (x,y) = 
+            let
+                val tyexp = transTy tenv pos (#typ x)
+				val lvl   = topLevel()
+                val numberLev = getActualLev()
+                val escape' = #escape x
+            in
+                tabRInserta (#name x, (Var {ty=tyexp,access = allocArg lvl (!escape'),level=numberLev}),y) 
+            end
                   
-      and trdecfun  (venv,tenv)  [] es     = es
-        | trdecfun  (venv,tenv) (x::xs) es =   
+      and trdecfun  (venv,tenv)  []     = ()
+        | trdecfun  (venv,tenv) (x::xs) =   
           let 
-             val exp = auxBody venv tenv x
-          in trdecfun (venv,tenv) xs (exp::es) end        
+             val expr = auxBody venv tenv x
+          in trdecfun (venv,tenv) xs
+          end        
       and transTy tenv pos (NameTy s)    = 
           let 
               val ti = case tabBusca (s,tenv) of
