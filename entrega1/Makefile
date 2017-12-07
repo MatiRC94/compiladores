@@ -26,7 +26,7 @@ EXEFILE=
 
 GRALOBJS= tigerabs.uo tigergrm.uo tigerlex.uo tigermain.uo \
 	tigernlin.uo tigerpp.uo tigerescap.uo tigertab.uo tigerseman.uo tigertemp.uo tigertopsort.uo tigermuestratipos.uo \
-	printty.uo tigertree.uo tigerframe.uo  tigerit.uo tigerpila.uo
+	printty.uo tigertree.uo tigerframe.uo  tigerit.uo tigerpila.uo tigertrans.uo
 
 all: tiger
 

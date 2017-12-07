@@ -21,7 +21,7 @@
         fun pushLevel l = tigerpila.pushPila levelPila l
         fun popLevel() = tigerpila.popPila levelPila 
         fun topLevel() = tigerpila.topPila levelPila
-
+        (* PROBAR ./tiger pruebastiger/tests/good/compare-record-and-nil.tig que tira error de tipos*)
         val tab_vars : (string, EnvEntry) Tabla = tabInserList(
                 tabNueva(),
                 [("print", Func{level=topLevel(), label="print",
@@ -149,16 +149,16 @@
                         val {exp=expl, ty=tyl} = trexp left
                         val {exp=expr, ty=tyr} = trexp right
                     in
-                        if tiposIguales tyl tyr andalso not (tyl=TNil andalso tyr=TNil) andalso tyl<>TUnit then 
-                            {exp=if tiposIguales tyl TString then binOpStrExp {left=expl,oper=EqOp,right=expr} else binOpIntRelExp {left=expl,oper=EqOp,right=expr}, ty=TInt}
-                            else error("Tipos no comparables", nl)
+                        if tiposIguales tyl tyr andalso (error ("ACA linea 152",nl);not (tyl=TNil andalso tyr=TNil)) andalso tyl<>TUnit then 
+                                {exp=if tiposIguales tyl TString then binOpStrExp {left=expl,oper=EqOp,right=expr} else binOpIntRelExp {left=expl,oper=EqOp,right=expr}, ty=TInt}
+                           else error("Tipos no comparables", nl)
                     end
                 | trexp(OpExp({left, oper=NeqOp, right}, nl)) = 
                     let
                         val {exp=expl, ty=tyl} = trexp left
                         val {exp=expr, ty=tyr} = trexp right
                     in
-                        if tiposIguales tyl tyr andalso not (tyl=TNil andalso tyr=TNil) andalso tyl<>TUnit then 
+                        if  tiposIguales tyl tyr andalso (error ("los 2 Tnil",nl); not (tyl=TNil andalso tyr=TNil)) andalso (error ("los tyl <>Tunitl",nl); tyl<>TUnit )then 
                             {exp=if tiposIguales tyl TString then binOpStrExp {left=expl,oper=NeqOp,right=expr} else binOpIntRelExp {left=expl,oper=NeqOp,right=expr}, ty=TInt}
                             else error("Tipos no comparables", nl)
                     end
@@ -327,25 +327,25 @@
 		end (*READY*)
         and trdec (venv, tenv) (VarDec ({name,escape,typ=NONE,init},pos)) =
                         let val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
-                            val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
+(*                          val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit*)
                             val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
-			    val lvl = topLevel()
+			                val lvl = topLevel()
                             val numberLev = getActualLev()
-                            val venv' = tabRInserta (name,(Var {ty=tyv,access = allocLocal lvl (!escape),level=numberLev}),venv)
-                         in (venv', tenv, expinit) end (*READY*)
+                            val venv' = tabRInserta (name,(Var {ty=tyinit,access = allocLocal lvl (!escape),level=numberLev}),venv)
+                         in (venv', tenv, []) end (*READY*)
         | trdec (venv,tenv) (VarDec ({name,escape,typ=SOME s,init},pos)) = 
 	        let
 		             val {exp=expinit,ty=tyinit} = transExp (venv,tenv) init
                     val t' = case tabBusca (s,tenv) of
 		                		  NONE => error ("El tipo \""^s^"\" no esta declarado",pos)
 				                | SOME ss => ss
-                    val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit
+(*                    val tyv = if tyinit = TNil then error ("La expresion es de tipo NIL, no se puede asignar a una variable",pos) else tyinit*)
 		            val _ = if tyinit = TUnit then error ("La expresion devuevlve Unit, no se puede asignar a una variable",pos) else ()
-		            val _ = checkTipos tyv t' pos 
+		            val _ = checkTipos tyinit t' pos 
 		            val lvl = topLevel()
                             val numberLev = getActualLev()
-		            val venv' = tabRInserta (name,(Var {ty=tyv,access = allocLocal lvl (!escape),level=numberLev}),venv)
-           in (venv',tenv, expinit) end (*READY *)
+		            val venv' = tabRInserta (name,(Var {ty=tyinit,access = allocLocal lvl (!escape),level=numberLev}),venv)
+           in (venv',tenv, []) end (*READY *)
         | trdec (venv,tenv) (FunctionDec (xs)) =
           let 
                 val venv' = auxVenv (venv,tenv) xs
@@ -356,7 +356,7 @@
             let
                 val ts' = map (fn (x,pos) => x) ts
                 val tenv' = fijaTipos ts' tenv
-            in (venv, tenv', []) end (*READY*)
+            in (venv, tenv',[] ) end (*READY*)
 
         (*Funciones Auxiliares para FunctionDec *)    
       and auxVenv ((venv,tenv) : (venv * tenv)) [] : venv = venv (*La lista tiene utilidad en la generacion de cod inter*) (*primera pasada,actualiza venv*)
@@ -376,7 +376,7 @@
               val result'  = auxResult result tenv pos
 	      val _        = checkTipos result' ty pos
           in 
-              expr   
+              () 
           end
       and auxBodyFold tenv pos (x,y) = 
             let
@@ -385,13 +385,13 @@
                 val numberLev = getActualLev()
                 val escape' = #escape x
             in
-                tabRInserta (#name x, (Var {ty=tyexp,access = allocArg lvl (!escape'),level=numberLev}),y) 
+               tabRInserta (#name x, (Var {ty=tyexp,access = allocArg lvl (!escape'),level=numberLev}),y) 
             end
                   
       and trdecfun  (venv,tenv)  []     = ()
         | trdecfun  (venv,tenv) (x::xs) =   
           let 
-             val expr = auxBody venv tenv x
+             val _ = auxBody venv tenv x
           in trdecfun (venv,tenv) xs
           end        
       and transTy tenv pos (NameTy s)    = 
@@ -400,10 +400,11 @@
                             SOME ss => ss
                            |NONE => error ("El tipo \""^s^"\" no esta definido",pos)
           in ti  end
+                                 
         | transTy tenv pos _ = error ("No puede definir tipos dentro de una funcion",pos)
       and auxResult (SOME s) tenv pos = transTy tenv pos (NameTy s)
          |auxResult NONE a b  = TUnit
-        in trexp end
+        in trexp  end
 fun transProg ex =
     let    val main =
                 LetExp({decs=[FunctionDec[({name="_tigermain", params=[],
